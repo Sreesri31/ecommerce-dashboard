@@ -1,25 +1,63 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom"; // no BrowserRouter here
+import Dashboard from "./pages/Dashboard";
+import Products from "./pages/Products";
+import Orders from "./pages/Orders";
+import Login from './pages/Login';
+import MainLayout from "./layout/MainLayout";
+
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  return isLoggedIn ? <>{children}</> : <Navigate to="/login" />;
+};
 
 function App() {
+  const [products, setProducts] = useState(() => {
+    const saved = localStorage.getItem("products");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("products", JSON.stringify(products));
+  }, [products]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      {/* Public Route */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Private Routes */}
+      <Route
+        path="/"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Dashboard products={products} />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Products products={products} setProducts={setProducts} />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <PrivateRoute>
+            <MainLayout>
+              <Orders />
+            </MainLayout>
+          </PrivateRoute>
+        }
+      />
+    </Routes>
   );
 }
 
